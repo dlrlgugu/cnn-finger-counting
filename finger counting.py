@@ -34,11 +34,11 @@ def create_placeholders(n_H0, n_W0, n_C0, n_y):
     Y = tf.placeholder(tf.float32,shape=(None,n_y))
 
     return X,Y
-
+"""
 X, Y = create_placeholders(64, 64, 3, 6)
 print ("X = " + str(X))
 print ("Y = " + str(Y))
-
+"""
 def initialize_parameters():
     tf.set_random_seed(1)
 
@@ -49,7 +49,7 @@ def initialize_parameters():
 
     return parameters
 
-
+"""
 tf.reset_default_graph()
 with tf.Session() as sess_test:
     parameters = initialize_parameters()
@@ -58,7 +58,7 @@ with tf.Session() as sess_test:
     print(parameters["W1"])
     print("W1 ="+str(parameters["W1"].eval()[1,1,1]))
     print("W2 ="+str(parameters["W2"].eval()[1,1,1]))
-
+"""
 
 def forward_propagation(X, parameters):
     W1 = parameters['W1']
@@ -66,17 +66,17 @@ def forward_propagation(X, parameters):
 
     Z1 = tf.nn.conv2d(X,W1,strides=[1,1,1,1],padding='SAME')
     A1 = tf.nn.relu(Z1)
-    P1 = tf.nn.max_pool(A1,ksize=[1,8,8,1],strides=[1,8,8,1],padding='SAME')
+    P1 = tf.nn.max_pool(A1,ksize=[1,8,8,1],strides=[1,1,1,1],padding='SAME')
 
     Z2 = tf.nn.conv2d(P1,W2,strides=[1,1,1,1],padding='SAME')
     A2 = tf.nn.relu(Z2)
-    P2 = tf.nn.max_pool(A2,ksize=[1,4,4,1],strides=[1,4,4,1],padding='SAME')
+    P2 = tf.nn.max_pool(A2,ksize=[1,4,4,1],strides=[1,1,1,1],padding='SAME')
 
     P2 = tf.contrib.layers.flatten(P2)
     Z3 = tf.contrib.layers.fully_connected(P2,6,activation_fn=None)
 
     return Z3
-
+"""
 tf.reset_default_graph()
 
 with tf.Session() as sess:
@@ -88,13 +88,13 @@ with tf.Session() as sess:
     sess.run(init)
     a = sess.run(Z3, {X: np.random.randn(2,64,64,3), Y: np.random.randn(2,6)})
     print("Z3 = " + str(a))
-
+"""
 
 def compute_cost(Z3, Y):
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=Z3,labels=Y))
     return cost
 
-
+"""
 tf.reset_default_graph()
 
 with tf.Session() as sess:
@@ -107,10 +107,10 @@ with tf.Session() as sess:
     sess.run(init)
     a = sess.run(cost, {X: np.random.randn(4,64,64,3), Y: np.random.randn(4,6)})
     print("cost = " + str(a))
-
+"""
 
 def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.009,
-          num_epochs = 100, minibatch_size = 64, print_cost = True):
+          num_epochs = 10, minibatch_size = 64, print_cost = True):
     
     ops.reset_default_graph()
     tf.set_random_seed(1)
@@ -170,9 +170,59 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.009,
                                   
 
 _, _, parameters = model(X_train, Y_train, X_test, Y_test)
+"""
+def predict(X, parameters):
+    #init = tf.global_variables_initializer()
+    #sess.run(init)
+    """
+    W1 = tf.convert_to_tensor(parameters["W1"])
+    W2 = tf.convert_to_tensor(parameters["W2"])
+    params = {"W1": W1,"W2": W2}
+    """
+    x = tf.placeholder(tf.float32, shape=(None,64,64,3))##
+    
+    z3 = forward_propagation(x, parameters)
+    p = tf.argmax(z3)
+    
+    with tf.Session() as sess:
+        prediction = sess.run(p, feed_dict = {x: X})
+        
+    return prediction
 
+    
+test_img = [ str(i)+".jpg" for i in range(1,11)]
 
+image = np.array(ndimage.imread(test_img[0],flatten=False))
+plt.imshow(image)
+#plt.show()
+print(image.shape)
 
+init = tf.global_variables_initializer()
+sess=tf.Session()
+sess.run(init)
+
+for i in test_img:
+    image = np.array(ndimage.imread(i,flatten=False))
+    #print(image.shape)
+    my_image = scipy.misc.imresize(image,size=(64,64))#.reshape((1,64,64,3))#.T   
+    print(my_image.shape)
+    my_image_norm = my_image/255.
+    my_image_test = np.expand_dims(my_image_norm,0)
+    print(my_image_test.shape)
+    #plt.imshow(my_image_test[0])
+    
+    p = predict(my_image_test,parameters)
+    print(p)
+    #my_predicted_image = predict(parameters["w"],parameters["b"],my_image)
+
+    #plt.imshow(image)
+    #print("y = " + str(np.squeeze(my_predicted_image)) + ", your algorithm predicts a \"" )
+    #print (int(np.squeeze(my_predicted_image)) )
+
+#https://stackoverflow.com/questions/33711556/making-predictions-with-a-tensorflow-model
+"""  
+    
+                     
 
 
     
